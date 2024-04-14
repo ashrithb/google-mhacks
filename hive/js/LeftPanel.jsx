@@ -9,7 +9,11 @@ export default function LeftPanel({isLoading, onSearch}) {
 
   return (
     <div className="panel">
-       <input
+      <h1 className="left_header" >Welcome to Hive</h1>
+      {/* <img src = "../static/img/android-chrome-512x512.png"/> */}
+      <h1 className="left_name">Hive</h1>
+      <div className = "search_container">
+       <input 
         type="text"
         className="text-input" // Example class for input
         placeholder="Find me something to do..."
@@ -19,9 +23,11 @@ export default function LeftPanel({isLoading, onSearch}) {
       <button className="search-button" onClick={onSearch}>
         Search
       </button>
+      </div>
       {
       isLoading ? (
-        <div className="loading-spinner"></div>
+        <div className="loading-spinner">
+        </div>
       ) : (
         null // or any other JSX you want to render when not loading
       )

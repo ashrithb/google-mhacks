@@ -27,8 +27,8 @@ events = [
     {
         "event_id": 1,
         "event_description": "(Title of event or activites)",
-        "Group": "(Set of Friends involved in activity)"
-        "Location": "(Location of activity)"
+        "friends": "(Set of Friends involved in activity)"
+        "time": (Date and Time of Event, Format: Day of Week, HH:MM; Example: Sunday, 10:30PM)
     },
     (up to 10 events)
 ]

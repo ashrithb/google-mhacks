@@ -45,6 +45,7 @@ export default function App() {
       <div className="panel-container">
   
         <LeftPanel onSearch={handleSearch} isLoading={true} />
+       
         {/* // Testing Comment CHange  */}
         <MiddlePanel results={results} />
   

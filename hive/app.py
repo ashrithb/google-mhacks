@@ -1,6 +1,7 @@
-from flask import Flask
+from flask import Flask, redirect, url_for
 import flask
 import json
+import logging
 from flask import jsonify, request
 import requests
 import google.generativeai as genai
@@ -9,10 +10,15 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from flask_cors import CORS
+import threading
 
 app = Flask(__name__)
+app.config['DEBUG'] = True
+
 CORS(app)  # This applies CORS to all routes and all origins
+logging.basicConfig(filename='flask.log', level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
 
 with open('config.json') as f:
     app_config = json.load(f)
@@ -55,8 +61,8 @@ events = [
     {
         "event_id": 1,
         "event_description": "(Title of event or activites)",
-        "Group": "(Set of Friends involved in activity)"
-        "Location": "(Location of activity)"
+        "friends": "(Set of Friends involved in activity)"
+        "time": (Date and Time of Event, Format: Day of Week, HH:MM; Example: Sunday, 10:30PM)
     },
     (up to 10 events)
 ]
@@ -285,16 +291,19 @@ def create_service():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
+                'credentials.json',SCOPES)
+            print("Post Flow")
+            creds = flow.run_local_server(port=5000)
         # Save the credentials for next ime
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
     try:
+        print("Attempted to creat service")
         service = build('calendar', 'v3', credentials=creds)
     except Exception as e:
         print(e)
         return None
+    print("returned form creation")
     return service
 
 #for the ids, pretty sure its just their primary email for the calendar
@@ -331,6 +340,16 @@ def api():
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
+@app.route('/oauth2callback')
+def oauth2callback():
+    flow = InstalledAppFlow.from_client_secrets_file(
+        'client_secrets.json',
+        scopes=['https://www.googleapis.com/auth/calendar.readonly'],
+        redirect_uri='http://localhost:8000/oauth2callback'  # This line must be updated
+    )
+    flow.fetch_token(authorization_response=request.url)
+    # Proceed with fetching user data
+    return 'Authentication successful!'
 
 @app.route('/')
 def index():
@@ -339,5 +358,18 @@ def index():
     # response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
+def initiate_auth():
+    SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+    flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+    creds = flow.run_local_server(port=2000)
+    # Save credentials logic here
+    
+@app.route('/login')
+def login():
+    """Route to start the OAuth flow."""
+    thread = threading.Thread(target=initiate_auth)
+    thread.start()
+    thread.join()
+    return redirect(url_for('home'))
 if __name__ == '__main__':
     app.run(debug=True)

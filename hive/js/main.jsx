@@ -4,8 +4,9 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import LeftPanel from './LeftPanel';
 import MiddlePanel from './MiddlePanel';
 import RightPanel from './RightPanel';
-import App from './Query'
-// import '../styles/styles.css'; 
+import App from './Query';
+import Image from './Image';
+import '../styles/styles.css'; 
 // const app = express();
 // app.use(cors());
 const root = createRoot(document.getElementById("reactEntry"));
@@ -56,9 +57,10 @@ const root = createRoot(document.getElementById("reactEntry"));
 //     </div>
 //   );
 // }
-
+const URLTomato = "https://i5.walmartimages.com/seo/Fresh-Slicing-Tomato-Each_a1e8e44a-2b82-48ab-9c09-b68420f6954c.04f6e0e87807fc5457f57e3ec0770061.jpeg"
 root.render(
     <StrictMode>
       <App />
+
     </StrictMode>,
 );

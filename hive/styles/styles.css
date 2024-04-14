@@ -7,30 +7,81 @@ body {
 
   .panel-container {
     display: flex; /* Use Flexbox for layout */
-    height: 100vh; /* Make it take full viewport height */
+    height: 100%; /* Make it take full viewport height */
   }
 
 
   .panel {
-    background-color: #fff; /* White background */
-    padding: 20px;
-    flex: 1; /* Make panels take equal width */
+    flex: 1;
+    width: calc(100% / 3);
+    height: 100vh;
+    background-color: #f0f0f0; /* Light gray background color */
+    border: 1px solid #ccc; /* Light gray border */
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Drop shadow effect */
+    padding: 20px; /* Padding inside the box */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .box p {
+    text-align: center;
+    font-size: 18px;
+    color: #333;
   }
 
   .search-button {
-    background-color: #ffd400; /* Yellow background for button */
+
     color: #fff; /* White text */
-    border: none;
     padding: 10px 20px;
-    border-radius: 5px;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
   }
   
   .result-box {
     border-left: 5px solid #ffd400; /* Yellow left border for result boxes */
+    width:100%;
   }
-
+  .left_header {
+    font-size: 40px; /* Adjust the font size as needed */
+    font-weight: bold; /* Add bold font weight */
+    margin-bottom: 20px; /* Add some margin below the header */
+    position: absolute; /* Position the header absolutely */
+    top: 10px; /* Adjust the top position as needed */
+    text-align: center; /* Adjust the left position as needed */
+    color: orange;
+  }
+  .left_name {
+    font-size: 60px; /* Adjust the font size as needed */
+    font-weight: bold; /* Add bold font weight */
+    text-align: center;
+    color: orange;
+    margin-bottom: 20px; /* Add some margin below the header */
+  }
   .panel {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  .text-input
+  {
+    padding: 10px;
+    width: 70%; /* Make the textbox 80% of the width of the box */
+  border: 2px solid #ccc;
+  border-radius: 15px;
+  font-size: 16px;
+  flex: 1;
+  /* margin-right: 10px; */
+
+  }
+  .search_container{
+    width:100%;
   }
 
   .loading-spinner {
@@ -42,7 +93,58 @@ body {
   .loading-spinner svg {
     animation: spin 2s linear infinite; /* Add animation for spinning */
   }
+
+  .result-box {
+    border-radius: 20px; /* Adjust the border radius to control the oval shape */
+    background-color: #e0e0e0; /* Background color of the text box */
+    padding: 10px; /* Adjust padding as needed */
+    margin-bottom: 20px; /* Adjust margin between boxes */
+  }
   
+  .event-title {
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 5px;
+  }
+  
+  .event-time {
+    font-style: italic;
+    margin-bottom: 5px;
+  }
+  
+  .event-friends {
+    font-size: 14px;
+    color: #666;
+  }
+  
+
+  .event-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    width:100%;
+    /* border: 1px solid #ccc; Just for visualization */
+  }
+  
+  .event-title-friends-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .event-title {
+    font-weight: bold;
+  }
+  
+  .event-friends {
+    color: gray;
+  }
+  
+  .event-time {
+    margin-left: auto; /* Pushes the time to the right end */
+  }
+
   @keyframes spin {
     from {
       transform: rotate(0deg);
