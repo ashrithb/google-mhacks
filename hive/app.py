@@ -27,8 +27,6 @@ with open('config.json') as f:
 
 
 # Set up gemini models
-# AIzaSyDbz_gIUNeiW3WKwV6ucRPQM_N8EIfpOZQ
-# AIzaSyC5rlLAjwbiQOo8ySOhRZuyXtZDTD_LuWA
 gemini_key = app_config["gemini_key"]
 genai.configure(api_key=gemini_key)
 
