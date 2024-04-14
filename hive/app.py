@@ -5,22 +5,62 @@ from flask import jsonify, request
 import requests
 import google.generativeai as genai
 import os
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # This applies CORS to all routes and all origins
 
 with open('config.json') as f:
     app_config = json.load(f)
 
 
-seatgeek_secret = app_config["seatgeek_secret"]
-seatgeek_id = app_config["seatgeek_id"]
+
 
 # Set up gemini models
+# AIzaSyDbz_gIUNeiW3WKwV6ucRPQM_N8EIfpOZQ
+# AIzaSyC5rlLAjwbiQOo8ySOhRZuyXtZDTD_LuWA
 gemini_key = app_config["gemini_key"]
 genai.configure(api_key=gemini_key)
 
-mixed_query_system_prompt = ("""T
+mixed_query_system_prompt = ("""The prompts that follow will contain the following components delimited by 10 * in a row: the busy time slots given by the calendar of the user, interests of the user, busy time slots of the friends of the user where each friend's free times are delimited by 10 dashes in a row,   
+interests of each friend delimited by 10 dashes in a row, paid events in json format generated from the user prompt, free events available in the users area, and a list of general activities.
 
+Based on the availability of the user, generate a list of 10 potential group activities containing a set or subset of the friends in the group that are from events listed in the prompt. An example input will be pasted below for clarity and input should be expected in the specified format. The potential group activities will also outputed in a json in the format listed below.
+Prompt:
+(Free Time Slots of the User)
+**********
+(User interests)
+**********
+(Friend 1 Free Time Slots)
+----------
+(Friend 2 Free Time Slots)
+**********
+(Friend 1 Interests)
+----------
+(Friend 2 Interests)
+**********
+(Json of Paid Events)
+**********
+(Free Events in User Area)
+**********
+(List of General Activites)
+
+Response:
+{
+events = [
+    {
+        "event_id": 1,
+        "event_description": "(Title of event or activites)",
+        "Group": "(Set of Friends involved in activity)"
+        "Location": "(Location of activity)"
+    },
+    (up to 10 events)
+]
+}
 """)
 mixed_query_model = genai.GenerativeModel('gemini-1.5-pro-latest', system_instruction=mixed_query_system_prompt)
 
@@ -85,50 +125,65 @@ general_activities = [
 ]
 
 
-interests = {
-    "OJ": ["Football", "Gambling (legally)", "Driving", "Gardening", "country music"],
-    "Ammad": ["Cooking", "Knitting", "EDM", "Fishing", "Biking"]
-}
 
-@app.route('/api')
-def api():
-    user_query = ""
-    # Query SeatGeek API for events
-    geoip= request.args.get('geoip')
-    
-    sg_events = get_seatgeek_results(user_query, geoip)
+
+
+from requests.auth import HTTPBasicAuth
 
 
 def get_seatgeek_events(datetime_min, datetime_max, geoip, city=None, state= None, query=None ):
     url = ""
+    # if query:
+    #     if state and city:
+    #         url = f'https://api.seatgeek.com/2/events?q={query}&datetime_utc.gte={datetime_min}&datetime_utc.lte={datetime_max}&venue.state={state}&venue.city={city} -u {seatgeek_id}:{seatgeek_secret}'
+    #     else:
+    #         url = f'https://api.seatgeek.com/2/events?q={query}&datetime_utc.gte={datetime_min}&datetime_utc.lte={datetime_max} -u {seatgeek_id}:{seatgeek_secret}'
+    # else:
+    #     if state and city:
+    #         url = f'https://api.seatgeek.com/2/events?geoip={geoip}&datetime_utc.gte={datetime_min}&datetime_utc.lte={datetime_max}&venue.state={state}&venue.city={city} -u {seatgeek_id}:{seatgeek_secret}'
+    #     else:
+    #         url = f'https://api.seatgeek.com/2/events?geoip={geoip}&datetime_utc.gte={datetime_min}&datetime_utc.lte={datetime_max} -u {seatgeek_id}:{seatgeek_secret}'
+    # print(url)
+    # API endpoint
+    url = "https://api.seatgeek.com/2/events"
+    params = {
+        "geoip": 'true',
+        "datetime_utc.gte": datetime_min,
+        "datetime_utc.lte": datetime_max
+    }
+    if city and state:
+        params['venue.city'] = city
+        params['venue.state'] = state
     if query:
-        if state and city:
-            url = f'https://api.seatgeek.com/2/events?q={query}&datetime_utc.gte={datetime_min}&datetime_utc.lte={datetime_max}&venue.state={state}&venue.city={city}'
-        else:
-            url = f'https://api.seatgeek.com/2/events?q={query}&datetime_utc.gte={datetime_min}&datetime_utc.lte={datetime_max}'
-    else:
-        if state and city:
-            url = f'https://api.seatgeek.com/2/events?geoip={geoip}&datetime_utc.gte={datetime_min}&datetime_utc.lte={datetime_max}&venue.state={state}&venue.city={city}'
-        else:
-            url = f'https://api.seatgeek.com/2/events?geoip={geoip}&datetime_utc.gte={datetime_min}&datetime_utc.lte={datetime_max}'
-        
+        params['q'] = query
     events_response = requests.get(url) 
+        # Authentication credentials
+
+    password = app_config["seatgeek_secret"]
+    username = app_config["seatgeek_id"]
+    print(params, username, password)
+    events_response = requests.get(url, params=params, auth=HTTPBasicAuth(username, password))
+    print(events_response.json())
     if events_response.status_code == 200:
         data = events_response.json()
+        print(data)
         return jsonify(data)
     else:
-        return jsonify({'error': 'Failed to fetch data from SeatGeek API'}), events_response.status_code
+        print("Failed querying SeatGeek API")
+        return jsonify({'error': 'Failed to fetch data from SeatGeek API'})
         
 
 # Convert user query into a simplified query for seatgeek
 def get_seatgeek_results(query, geoip):
     prompt = query
+    # print("Prompt:" + prompt)
     response = query_processing_model.generate_content(prompt)
-    if response == "No": # User doesn't want a specific seatgeek query
+    if response.text == "No": # User doesn't want a specific seatgeek query
         #TODO: Make current week 
+        print("Doing default Seatgeek API query")
         return get_seatgeek_events("2024-04-14", "2024-04-20", geoip, None)
     else:
-        response= " " + response + " "
+        response= " " + response.text + " "
         segments = response.split(",")
         if len(segments) < 4:
             return get_seatgeek_events("2024-04-14", "2024-04-20", geoip, None)
@@ -141,13 +196,18 @@ def get_seatgeek_results(query, geoip):
         if len(segments) > 4:
             extra_info = segments[4].strip()
             extra_info = '+'.join(extra_info.split())
-        
+        print("Doing custom Seatgeek API query where city = " + city + ", state = " + state + ", extra info = " + extra_info)
         return get_seatgeek_events(start_date, end_date, geoip, city=city, state=state, query=extra_info)
 def generate_mixed_result(query, geoip): # Returns json
+    interests = {
+        "OJ": ["Football", "Gambling (legally)", "Driving", "Gardening", "country music"],
+        "Ammad": ["Cooking", "Knitting", "EDM", "Fishing", "Biking"]
+    }
     event_response = get_seatgeek_results(query, geoip)
+    print(event_response)
 
     # String of JSON of event data from query
-    event_data = str(event_response.get_json())
+    event_data = str(event_response)
     
     # Free events data 
     free_things_prompt = """List things to do for free in Ann Arbor today with no additional text"""
@@ -155,7 +215,7 @@ def generate_mixed_result(query, geoip): # Returns json
 
     # Put calendar information and seat geek response into a singular prompt for context
     friend_free_times = []
-    friend_interests = []
+    friend_interests = ["Playing Basketball", "Playing soccer", "Watching Football"],["Cooking", "Baking", "Watching Football"]
     gemini_input = ""
     delimiter = "**********"
     # Add user Free time
@@ -172,21 +232,74 @@ def generate_mixed_result(query, geoip): # Returns json
     gemini_input += delimiter
     gemini_input += event_data # Seat geek events
     gemini_input += delimiter
-    gemini_input += free_activity_response # Free things to do around town
+    gemini_input += free_activity_response.text # Free things to do around town
     gemini_input += delimiter
-    gemini_input += general_activities # General things to do
+    gemini_input += str(general_activities) # General things to do
+
+    #for our gcal service
+    service = create_service()
+    if service is None:
+        print("Failed to create service")
+        return None
+
+    # Define the time range for the free/busy query
+    #using a fixed range, but should replace this with the actual range you want to check
+    timeMin = "2024-04-14T00:00:00Z"
+    timeMax = "2024-04-20T23:59:59Z"  
+
+    free_busy_info = get_free_busy_info(timeMin, timeMax)
+
+    busy_times = free_busy_info.get('calendars', {}).values()
+
+    for busyTime in busy_times:
+        busyTimeStr= json.dumps(busyTime)
+        friend_free_times.append(busyTimeStr)# this will input only the busy times, not free times
+
+    # result['free_busy_info'] = free_busy_info
+    # resultStr= json.dumps(result)
+    # gemini_input += delimiter
+    # gemini_input += resultStr
 
     gemini_suggestion_text = mixed_query_model.generate_content(gemini_input)
-    gemini_suggestions = json.loads(gemini_suggestion_text)
-    return gemini_suggestions
+    print(gemini_input)
+    try:
+        gemini_suggestions = json.loads(gemini_suggestion_text)
+        return gemini_suggestions
+    
+    except Exception as e:
+        print("Invalid activity suggestions")
+        return None
+    
 
-
-
-
-
+def create_service():
+    SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
+    creds = None
+    # The file token.json stores the user's access and refresh tokens, and is
+    # created automatically when the authorization flow completes for the first
+    # time.
+    if os.path.exists('token.json'):
+        creds = Credentials.from_authorized_user_file('token.json')
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'credentials.json', SCOPES)
+            creds = flow.run_local_server(port=0)
+        # Save the credentials for next ime
+        with open('token.json', 'w') as token:
+            token.write(creds.to_json())
+    try:
+        service = build('calendar', 'v3', credentials=creds)
+    except Exception as e:
+        print(e)
+        return None
+    return service
 
 #for the ids, pretty sure its just their primary email for the calendar
-def get_free_busy_info(timeMin, timeMax, ids, timeZone='UTC', groupExpansionMax=100, calendarExpansionMax=50):
+def get_free_busy_info(timeMin, timeMax, timeZone='UTC', groupExpansionMax=100, calendarExpansionMax=50):#not passing in ids anymore
+    ids=["ashrithlb@gmail.com", "nadipellipratik@gmail.com", "aditkk29@gmail.com"]
     url = 'https://www.googleapis.com/calendar/v3/freeBusy'
     headers = {'Content-Type': 'application/json'}
     data = {
@@ -200,10 +313,31 @@ def get_free_busy_info(timeMin, timeMax, ids, timeZone='UTC', groupExpansionMax=
     response = requests.post(url, headers=headers, data=json.dumps(data))
     return response.json()
 
+
+######################################################################
+#                       ROUTING                                      #                    
+######################################################################
+@app.route('/api')
+def api():
+    
+    user_query = request.args.get('user_query')
+    # Query SeatGeek API for events
+    geoip= request.args.get('geoip')
+    # [ user_query = "I want to golfing", geoip = "48.29234.32432"]
+    
+    suggestions = generate_mixed_result(user_query, geoip) # JSON of results
+    print(suggestions)
+    response = flask.jsonify({'results': suggestions})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
 @app.route('/')
 def index():
     context = {'name': "OJ Simpson"}
-    return flask.render_template("index.html", **context)
+    response = flask.render_template("index.html", **context)
+    # response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True)

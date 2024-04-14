@@ -1,0 +1,53 @@
+body {
+    background-color: #f5f5f5; /* Light gray background */
+    margin: 0; /* Reset default margins */
+    font-family: 'Arial', sans-serif; /* Example font */
+  }
+
+
+  .panel-container {
+    display: flex; /* Use Flexbox for layout */
+    height: 100vh; /* Make it take full viewport height */
+  }
+
+
+  .panel {
+    background-color: #fff; /* White background */
+    padding: 20px;
+    flex: 1; /* Make panels take equal width */
+  }
+
+  .search-button {
+    background-color: #ffd400; /* Yellow background for button */
+    color: #fff; /* White text */
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+  }
+  
+  .result-box {
+    border-left: 5px solid #ffd400; /* Yellow left border for result boxes */
+  }
+
+  .panel {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  .loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .loading-spinner svg {
+    animation: spin 2s linear infinite; /* Add animation for spinning */
+  }
+  
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }

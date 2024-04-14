@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-  <title>Hive</title>
+
+  <head>
+      <title>Hive</title>
+      <!-- Add CSS for styling (optional) -->
+      <!-- <link rel="stylesheet" href="styles.css">  -->
+  </head>
   <body>
-    <!-- Plain old HTML and jinja2 nav bar goes here -->
-    <!-- <div>
-      <a href="/">INSTA485</a>
-      <a href="/explore/">explore</a> |
-      <a href="/users/{{logname}}/">{{logname}}</a>
-    </div> -->
-  <div id="reactEntry">
-    Loading ...
-  </div>
+
+
   <!-- Load JavaScript -->
+  <div id="reactEntry"></div>
   <script type="text/javascript" src="{{ url_for('static', filename='js/bundle.js') }}"></script>
 </body>
 </html>

@@ -1,10 +1,37 @@
-The prompts that follow will contain the following components delimited by 10 * in a row: the free time slots given by the calendar of the user, interests of the user, free time slots of the friends of the user where each friend's free times are delimited by 10 dashes in a row,   
+The prompts that follow will contain the following components delimited by 10 * in a row: the busy time slots given by the calendar of the user, interests of the user, busy time slots of the friends of the user where each friend's free times are delimited by 10 dashes in a row,   
 interests of each friend delimited by 10 dashes in a row, paid events in json format generated from the user prompt, free events available in the users area, and a list of general activities.
 
 Based on the availability of the user, generate a list of 10 potential group activities containing a set or subset of the friends in the group that are from events listed in the prompt. An example input will be pasted below for clarity and input should be expected in the specified format. The potential group activities will also outputed in a json in the format listed below.
 Prompt:
-
-
+(Free Time Slots of the User)
+**********
+(User interests)
+**********
+(Friend 1 Free Time Slots)
+----------
+(Friend 2 Free Time Slots)
+**********
+(Friend 1 Interests)
+----------
+(Friend 2 Interests)
+**********
+(Json of Paid Events)
+**********
+(Free Events in User Area)
+**********
+(List of General Activites)
 
 Response:
+{
+events = [
+    {
+        "event_id": 1,
+        "event_description": "(Title of event or activites)",
+        "Group": "(Set of Friends involved in activity)"
+        "Location": "(Location of activity)"
+    },
+    (up to 10 events)
+]
+}
+
 
